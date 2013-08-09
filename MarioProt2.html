@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="http://cdn.html5quintus.com/v0.1.1/quintus-all.min.js"></script>
+  </head>
+  <body>
+    <script>
+    var Q = Quintus().include("Sprites, Scenes, Input, 2D").setup({ 
+		width: 800, 
+		height: 800 
+	}).controls();
+	
+	//Mario
+    Q.Sprite.extend("Mario", {
+		init: function(p) {
+			this._super(p, {
+				sheet: "mario", 
+				frame: 0,
+				w: 18, h: 32, 
+				x: 100, y: 100
+			});
+		this.add("2d, platformerControls");
+      }
+    });
+	
+	Q.Sprite.extend("Target", {
+		init: function(p) {
+			this._super(p, {
+				sheet: "level1",
+				frame: 0,
+				w: 18, h: 32, 
+				x: 100, y: 100
+			});
+		}
+	});
+	//Nemici
+    Q.Sprite.extend("Enemy", {
+      init: function(p) {
+        this._super(p, {
+          asset: "enemy.png",
+          w: 27, 
+		  h: 19, 
+          x: 300, 
+		  y: 100,
+          vx: 100
+        });
+        this.add("2d, aiBounce");
+		//Collisione con Mario
+        this.on("bump.left, bump.right, bump.bottom", function(collision) {
+          if (collision.obj.isA("Mario")) { 
+            collision.obj.destroy(); //Uccidi Mario.
+            Q.clearStages();
+            Q.stageScene('myscene');
+          }
+        });
+		//Collisione con Mario (in testa)
+        this.on("bump.top", function(collision) {
+          if (collision.obj.isA("Mario")) { 
+            this.destroy(); //Distruggi Nemico
+            collision.obj.p.vy = -300;
+          }
+        });
+      }
+    });
+	
+	/** SCENE */
+    Q.scene("myscene", function(stage) {
+		stage.collisionLayer(new Q.TileLayer({ 
+		tileW: 16, 
+		tileH: 16, 
+		dataAsset: "level1.json", 
+		sheet: "level1" 
+	}));
+		var mario = stage.insert(new Q.Mario());
+		stage.add("viewport").follow(mario); //Telecamera centrata su Mario
+		stage.insert(new Q.Enemy({ 
+			x: 300 
+		}));
+		stage.insert(new Q.Enemy({ 
+			x: 400 
+		}));
+		
+		stage.insert(new Q.Enemy({ 
+			x: 500 
+		}));
+		
+		stage.insert(new Q.Enemy({ 
+			x: 600 
+		}));
+		stage.insert(new Q.Enemy({ 
+			x: 50 
+		}));
+    });
+	
+	/** LOAD */
+    Q.load("mario.png, level1.png, level1.json, enemy.png", function() {
+		Q.sheet("level1", "level1.png", { //Sfondo
+			tilew: 16, 
+			tileh: 16, 
+			sx: 0, 
+			sy: 0 
+		});
+		Q.sheet("mario", "mario.png", { //Mario
+			tilew: 18, 
+			tileh: 32, 
+			sx: 0, 
+			sy: 0 
+		});
+		
+      Q.stageScene("myscene");
+    });
+    </script>
+  </body>
+</html>
